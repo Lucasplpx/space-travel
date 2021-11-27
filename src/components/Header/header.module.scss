@@ -1,0 +1,23 @@
+.container {
+  height: 5rem;
+}
+
+.content {
+  max-width: 1120px;
+  margin: 0 auto;
+  height: 5rem;
+
+  display: flex;
+  align-items: center;
+
+  a {
+    display: inherit;
+  }
+
+  nav {
+    margin-left: 1rem;
+    span {
+      color: var(--pink);
+    }
+  }
+}

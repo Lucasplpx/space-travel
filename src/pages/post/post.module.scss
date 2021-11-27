@@ -1,0 +1,53 @@
+.container {
+  max-width: 1120px;
+  margin: 0 auto;
+}
+
+.imgHeader {
+  width: 100%;
+  height: 15rem;
+
+  object-fit: cover;
+}
+
+.headerPost {
+  margin-top: 2rem;
+
+  h1 {
+    font-size: 1.75rem;
+  }
+}
+
+.infoUser {
+  margin-top: 1rem;
+  display: flex;
+  align-items: center;
+
+  section {
+    display: flex;
+    align-items: center;
+    margin-right: 1rem;
+
+    img {
+      font-size: 0.9rem;
+    }
+
+    p {
+      margin-left: 0.5rem;
+      font-size: 0.9em;
+    }
+  }
+}
+
+.contentPost {
+  margin: 2rem 0;
+
+  h1 {
+    font-size: 1.75rem;
+  }
+
+  p {
+    margin-top: 0.5rem;
+    color: var(--text);
+  }
+}

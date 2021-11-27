@@ -1,0 +1,48 @@
+.container {
+  max-width: 1120px;
+  margin: 0 auto;
+}
+
+.contentPost {
+  margin: 2rem 0 2rem;
+
+  h1 {
+    font-size: 1.75rem;
+  }
+
+  p {
+    margin-top: 0.5rem;
+    color: var(--text);
+  }
+}
+
+.infoUser {
+  margin-top: 1rem;
+  display: flex;
+  align-items: center;
+
+  section {
+    display: flex;
+    align-items: flex-end;
+    margin-right: 1rem;
+
+    img {
+      font-size: 0.9rem;
+    }
+
+    p {
+      margin-left: 0.5rem;
+      font-size: 0.9em;
+    }
+  }
+}
+
+.loadPost {
+  background: inherit;
+  border: none;
+  color: var(--pink);
+
+  &:hover {
+    cursor: pointer;
+  }
+}
