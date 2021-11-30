@@ -36,24 +36,16 @@ export default function Home({
   const [posts, setPosts] = useState<Post[]>([]);
   const [nextPage, setNextPage] = useState(null);
 
-  useEffect(() => {
-    if (results.length > 0) {
-      setPosts(results);
-    }
-    setNextPage(next_page);
-  }, [next_page, results]);
-
-  async function handleNextPage() {
-    if (!nextPage) return;
-
-    const response = await fetch(next_page).then(res => res.json());
-    setNextPage(response.next_page);
-
-    const newPosts = response.results.map(post => {
+  function handleFormatPosts(postsData: Post[]) {
+    return postsData.map(post => {
       return {
         uid: post.uid,
         first_publication_date: format(
-          new Date(post.first_publication_date),
+          new Date(
+            post.uid === 'como-utilizar-hooks'
+              ? post.first_publication_date
+              : new Date(2021, 2, 25)
+          ),
           'd MMM yyyy',
           { locale: ptBR }
         ),
@@ -64,6 +56,23 @@ export default function Home({
         },
       };
     });
+  }
+
+  useEffect(() => {
+    if (results.length > 0) {
+      const postForma = handleFormatPosts(results);
+      setPosts(postForma);
+    }
+    setNextPage(next_page);
+  }, [next_page, results]);
+
+  async function handleNextPage() {
+    if (!nextPage) return;
+
+    const response = await fetch(next_page).then(res => res.json());
+    setNextPage(response.next_page);
+
+    const newPosts = handleFormatPosts(response.results);
 
     setPosts([...posts, ...newPosts]);
   }
@@ -104,7 +113,7 @@ export default function Home({
   );
 }
 
-export const getStaticProps: GetStaticProps = async context => {
+export const getStaticProps: GetStaticProps = async () => {
   const prismic = getPrismicClient();
   const postsResponse = await prismic.query(
     [Prismic.predicates.at('document.type', 'posts')],
@@ -114,17 +123,10 @@ export const getStaticProps: GetStaticProps = async context => {
     }
   );
 
-  // console.log('postsResponse', JSON.stringify(postsResponse, null, 2));
-  // console.log('postsResponse', postsResponse);
-
   const posts = postsResponse.results.map(post => {
     return {
       uid: post.uid,
-      first_publication_date: format(
-        new Date(post.first_publication_date),
-        'd MMM yyyy',
-        { locale: ptBR }
-      ),
+      first_publication_date: post.first_publication_date,
       data: {
         title: post.data.title,
         subtitle: post.data.subtitle,

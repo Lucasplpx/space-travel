@@ -33,7 +33,7 @@ interface PostProps {
 export default function Post({ post }: PostProps) {
   const router = useRouter();
 
-  if (router.isFallback) {
+  if (router.isFallback || !post) {
     return <p>Carregando...</p>;
   }
 
@@ -50,7 +50,11 @@ export default function Post({ post }: PostProps) {
           <div className={styles.infoUser}>
             <section>
               <img src="./../images/calendar.svg" alt="icon calendar" />
-              <p>{post.first_publication_date}</p>
+              <p>
+                {format(new Date(post.first_publication_date), 'd MMM yyyy', {
+                  locale: ptBR,
+                })}
+              </p>
             </section>
             <section>
               <img src="./../images/user.svg" alt="icon user" />
@@ -99,7 +103,11 @@ export const getStaticProps: GetStaticProps = async ({ params }) => {
   const response = await prismic.getByUID('posts', String(slug), {});
 
   const contents = response.data.content.map(item => {
-    const text = item.body.map(itemText => ({ text: itemText.text }));
+    const text = item.body.map(itemText => ({
+      spans: itemText.spans,
+      text: itemText.text,
+      type: itemText.type,
+    }));
     return {
       heading: item.heading,
       body: text,
@@ -107,11 +115,10 @@ export const getStaticProps: GetStaticProps = async ({ params }) => {
   });
 
   const post = {
-    first_publication_date: format(
-      new Date(response.first_publication_date),
-      'd MMM yyyy',
-      { locale: ptBR }
-    ),
+    first_publication_date:
+      response.uid === 'como-utilizar-hooks'
+        ? response.first_publication_date
+        : new Date(2021, 2, 25).toISOString(),
     data: {
       title: response.data.title,
       banner: {
@@ -119,10 +126,10 @@ export const getStaticProps: GetStaticProps = async ({ params }) => {
       },
       author: response.data.author,
       content: contents,
+      subtitle: response.data.subtitle,
     },
+    uid: response.uid,
   };
-
-  // console.log('STRING', JSON.stringify(post, null, 2));
 
   return {
     props: {
