@@ -6,13 +6,13 @@ import { useRouter } from 'next/router';
 import Link from 'next/link';
 import { getPrismicClient } from '../../services/prismic';
 
-// import commonStyles from '../../styles/common.module.scss';
 import styles from './post.module.scss';
 import LeavePreview from '../../components/LeavePreview';
 import Comments from '../../components/Comments';
 
 interface Post {
   first_publication_date: string | null;
+  last_publication_date: string | null;
   data: {
     title: string;
     banner: {
@@ -30,14 +30,42 @@ interface Post {
 
 interface PostProps {
   post: Post;
+  navigation: {
+    prevPost: {
+      uid: string;
+      data: {
+        title: string;
+      };
+    }[];
+    nextPost: {
+      uid: string;
+      data: {
+        title: string;
+      };
+    }[];
+  };
   preview: boolean;
 }
 
-export default function Post({ post, preview }: PostProps) {
+export default function Post({ post, navigation, preview }: PostProps) {
   const router = useRouter();
 
   if (router.isFallback || !post) {
     return <p>Carregando...</p>;
+  }
+
+  const isPostEdited =
+    post.first_publication_date !== post.last_publication_date;
+
+  let editionDate;
+  if (isPostEdited) {
+    editionDate = format(
+      new Date(post.last_publication_date),
+      "'* editado em' dd MMM yyyy', às' H':'m",
+      {
+        locale: ptBR,
+      }
+    );
   }
 
   return (
@@ -68,6 +96,7 @@ export default function Post({ post, preview }: PostProps) {
               <p>4 min</p>
             </section>
           </div>
+          {isPostEdited && <span>{editionDate}</span>}
         </div>
         {post.data.content.map(conteudo => (
           <div key={conteudo.heading} className={styles.contentPost}>
@@ -79,6 +108,26 @@ export default function Post({ post, preview }: PostProps) {
           </div>
         ))}
       </div>
+      <section className={`${styles.navigation} ${styles.container}`}>
+        {navigation?.prevPost.length > 0 && (
+          <div>
+            <h3>{navigation.prevPost[0].data.title}</h3>
+            <Link href={`/post/${navigation.prevPost[0].uid}`}>
+              <a>Post anterior</a>
+            </Link>
+          </div>
+        )}
+
+        {navigation?.nextPost.length > 0 && (
+          <div>
+            <h3>{navigation.nextPost[0].data.title}</h3>
+            <Link href={`/post/${navigation.nextPost[0].uid}`}>
+              <a>Próximo post</a>
+            </Link>
+          </div>
+        )}
+      </section>
+
       <Comments />
 
       {preview && <LeavePreview />}
@@ -114,6 +163,23 @@ export const getStaticProps: GetStaticProps = async ({
     ref: previewData?.ref || null,
   });
 
+  const prevPost = await prismic.query(
+    [Prismic.Predicates.at('document.type', 'posts')],
+    {
+      pageSize: 1,
+      after: response.id,
+      orderings: '[document.first_publication_date]',
+    }
+  );
+  const nextPost = await prismic.query(
+    [Prismic.Predicates.at('document.type', 'posts')],
+    {
+      pageSize: 1,
+      after: response.id,
+      orderings: '[document.last_publication_date desc]',
+    }
+  );
+
   const contents = response.data.content.map(item => {
     const text = item.body.map(itemText => ({
       spans: itemText.spans,
@@ -131,6 +197,7 @@ export const getStaticProps: GetStaticProps = async ({
       response.uid === 'como-utilizar-hooks'
         ? response.first_publication_date
         : new Date(2021, 2, 25).toISOString(),
+    last_publication_date: response.last_publication_date,
     data: {
       title: response.data.title,
       banner: {
@@ -146,6 +213,10 @@ export const getStaticProps: GetStaticProps = async ({
   return {
     props: {
       post,
+      navigation: {
+        prevPost: prevPost?.results,
+        nextPost: nextPost?.results,
+      },
       preview,
     },
   };
